@@ -1,0 +1,434 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "Vnet-o1": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            }
+        },
+        "SharedService-Subnet-01": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            }
+        },
+        "Data-Base-Subnet-02": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            }
+        },
+        "VNET-02": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            }
+        },
+        "Sensor-Subnet-01": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            }
+        },
+        "Sensor2-Subnet-02": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            }
+        },
+        "storageAccountName": {
+  "type": "string",
+  "metadata": {
+    "description": "Name of the Storage Account"
+  }
+  },
+  "sharedService-subnet-01-NSG": {
+  "type": "string",
+  "defaultValue": "nsg-shared-service",
+  "metadata": {
+    "description": "NSG for Shared Service subnet"
+  }
+},
+"DataBase-Subnet-02-NSG": {
+  "type": "string",
+  "defaultValue": "nsg-sensor-subnet",
+  "metadata": {
+    "description": "NSG for Sensor subnet"
+  }
+},
+  "sensor-01-NSG": {
+  "type": "string",
+  "defaultValue": "nsg-shared-service",
+  "metadata": {
+    "description": "NSG for Shared Service subnet"
+  }
+},
+
+"sensor-02-NSG" :{
+  "type": "string",
+  "defaultValue": "nsg-sensor-subnet",
+  "metadata": {
+    "description": "NSG for Sensor subnet"
+  }
+}
+
+
+    },
+    "functions": [],
+    "variables": {
+        "VNET-O1-Address-prefix": "10.20.0.0/16",
+        "SharedService-Subnet-Address-prefix": "10.20.10.0/24",
+        "DataBase-Subnet-Address-prefix": "10.20.20.0/24",
+        "VNET-O2-Address-prefix": "10.30.0.0/16",
+        "Sensor-01-Subnet-Address-prefix": "10.30.20.0/24",
+        "Sensor-02-Subnet-Address-prefix": "10.30.0.0/16"
+    },
+    "resources": [
+        // creating vnet peering for Vnet-o1 and VNET-02
+        {
+            "type": "micrisoft.network/virtualNetworks/virtualNetworkPeerings",
+            "apiVersion": "2023-05-01",
+            "name": "[concat(parameters('VNET-02'), '/peerings/', parameters('Vnet-o1'))]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "remoteVirtualNetwork": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('Vnet-o1'))]"
+                },
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": false,
+                "useRemoteGateways": false,
+                "remoteVirtualNetworkGateway": null
+            }
+        },
+        {
+            "type": "micrisoft.network/virtualNetworks/virtualNetworkPeerings",
+            "apiVersion": "2023-05-01",
+            "name": "[concat(parameters('Vnet-o1'), '/peerings/', parameters('VNET-02'))]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "remoteVirtualNetwork": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('VNET-02'))]"
+                },
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": false,
+                "useRemoteGateways": false,
+                "remoteVirtualNetworkGateway": null
+            }
+
+
+        },
+
+        // to create NSG for Shared Service subnet
+        {
+            "name": "[parameters('sharedService-subnet-01-NSG')]",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2024-03-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "nsgRule1",
+                        "properties": {
+                            "description": "description",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 100,
+                            "direction": "Inbound"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[parameters('DataBase-Subnet-02-NSG')]",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2024-03-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "nsgRule1",
+                        "properties": {
+                            "description": "description",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 100,
+                            "direction": "Inbound"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[parameters('sensor-01-NSG')]",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2024-03-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "nsgRule1",
+                        "properties": {
+                            "description": "description",
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 100,
+                            "direction": "Inbound"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[parameters('sensor-02-NSG')]",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2024-03-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "nsgRule1",
+                        "properties": {
+                            "description": "description",
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "*",
+                            "priority": 100,
+                            "direction": "*"
+                        }
+                    }
+                ]
+            }
+        },
+        // This is for creating the network interface for the storage account
+        {
+            "name": "[concat(parameters('storageAccountName'), '-nic')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2023-05-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "subnet": {
+                                "id": "[concat(variables('VNET-O1-Address-prefix'), '/subnets/', parameters('SharedService-Subnet-01'))]"
+                            },
+                            "privateIPAllocationMethod": "Dynamic"
+                        }
+                    }
+                ]
+            }
+        },
+        // This is for creating the network interface for the storage account
+        {
+            "name": "[concat(parameters('storageAccountName'), '-nic')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2023-05-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "subnet": {
+                                "id": "[concat(variables('VNET-O2-Address-prefix'), '/subnets/', parameters('Sensor-Subnet-01'))]"
+                            },
+                            "privateIPAllocationMethod": "Dynamic"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2023-05-01",
+            "name": "[concat(parameters('storageAccountName'), '-nic')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "subnet": {
+                                "id": "[concat(variables('VNET-O1-Address-prefix'), '/subnets/', parameters('SharedService-Subnet-01'))]"
+                            },
+                            "privateIPAllocationMethod": "Dynamic"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2023-05-01",
+            "name": "[parameters('storageAccountName')]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "kind": "StorageV2",
+            "properties": {}
+        },
+        // this is for creating the network interface for the storage account
+        {
+            "name": "[concat(parameters('storageAccountName'), '-nic')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2023-05-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "subnet": {
+                                "id": "[concat(variables('VNET-O2-Address-prefix'), '/subnets/', parameters('Sensor2-Subnet-02'))]"
+                            },
+                            "privateIPAllocationMethod": "Dynamic"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2023-05-01",
+            "name": "[parameters('storageAccountName')]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "kind": "StorageV2",
+            "properties": {}
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2023-05-01",
+            "name": "[parameters('Vnet-o1')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[variables('VNET-O1-Address-prefix')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[parameters('SharedService-Subnet-01')]",
+                        "properties": {
+                            "addressPrefix": "[variables('SharedService-Subnet-Address-prefix')]"
+                        }
+                    },
+                    {
+                        "name": "[parameters('Data-Base-Subnet-02')]",
+                        "properties": {
+                            "addressPrefix": "[variables('DataBase-Subnet-Address-prefix')]"
+                        }
+                    }
+                ]
+            }
+        },
+        // this is for creating the network interface for the storage account
+        {
+            "name": "[concat(parameters('storageAccountName'), '-nic')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2023-05-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "subnet": {
+                                "id": "[concat(variables('VNET-O2-Address-prefix'), '/subnets/', parameters('Sensor2-Subnet-02'))]"
+                            },
+                            "privateIPAllocationMethod": "Dynamic"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2023-05-01",
+            "name": "[parameters('storageAccountName')]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "kind": "StorageV2",
+            "properties": {}
+        },
+        // this is for creating the network interface for the storage account
+        {
+            "name": "[concat(parameters('storageAccountName'), '-nic')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2023-05-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "subnet": {
+                                "id": "[concat(variables('VNET-O2-Address-prefix'), '/subnets/', parameters('Sensor-Subnet-01'))]"
+                            },
+                            "privateIPAllocationMethod": "Dynamic"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2023-05-01",
+            "name": "[parameters('VNET-02')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[variables('VNET-O2-Address-prefix')]"
+                    ]
+                },
+                
+                "subnets": [
+                    {
+                        "name": "[parameters('Sensor-Subnet-01')]",
+                        "properties": {
+                            "addressPrefix": "[variables('Sensor-01-Subnet-Address-prefix')]"
+                        }
+                    },
+                    {
+                        "name": "[parameters('Sensor2-Subnet-02')]",
+                        "properties": {
+                            "addressPrefix": "[variables('Sensor-02-Subnet-Address-prefix')]"
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "outputs": {}
+}
